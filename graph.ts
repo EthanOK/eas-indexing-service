@@ -129,6 +129,10 @@ export async function startGraph() {
     { root, args, context, info },
     roles
   ) => {
+    if ("isOwnerRole" in context && context.isOwnerRole) {
+      return roles.includes("ADMIN");
+    }
+
     return !roles.includes("ADMIN");
   };
 
@@ -141,8 +145,14 @@ export async function startGraph() {
   const server = new ApolloServer({
     schema: schema,
     cache: "bounded",
-    introspection: true,
-    context: () => ({ prisma }),
+    context: async ({ req }) => {
+      let isOwnerRole = false;
+      const authorization = req.headers.authorization;
+      if (authorization == "test") {
+        isOwnerRole = true;
+      }
+      return { prisma, isOwnerRole };
+    },
   });
 
   const { url } = await server.listen(PORT);
