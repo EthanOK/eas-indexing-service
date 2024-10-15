@@ -129,11 +129,17 @@ export async function startGraph() {
     { root, args, context, info },
     roles
   ) => {
-    if ("isOwnerRole" in context && context.isOwnerRole) {
-      return roles.includes("ADMIN");
+    console.log(roles);
+
+    if (!roles.includes("ADMIN")) {
+      return true;
     }
 
-    return !roles.includes("ADMIN");
+    if ("isOwnerRole" in context && context.isOwnerRole) {
+      return true;
+    }
+
+    return false;
   };
 
   const schema = await buildSchema({
@@ -148,7 +154,8 @@ export async function startGraph() {
     context: async ({ req }) => {
       let isOwnerRole = false;
       const authorization = req.headers.authorization;
-      if (authorization == "test") {
+      // TODO: check authorization Role
+      if (authorization == "OSPOWNER") {
         isOwnerRole = true;
       }
       return { prisma, isOwnerRole };
