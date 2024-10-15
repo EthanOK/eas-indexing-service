@@ -129,8 +129,7 @@ export async function startGraph() {
     { root, args, context, info },
     roles
   ) => {
-    console.log(roles);
-
+    
     if (!roles.includes("ADMIN")) {
       return true;
     }
