@@ -151,6 +151,8 @@ export async function startGraph() {
   const server = new ApolloServer({
     schema: schema,
     cache: "bounded",
+    // TODO: production set to false
+    introspection: true,
     context: async ({ req }) => {
       let isOwnerRole = false;
       const authorization = req.headers.authorization;
