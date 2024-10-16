@@ -121,6 +121,19 @@ export async function startGraph() {
       deleteOneServiceStat: [Authorized(["ADMIN"])],
       deleteManyServiceStat: [Authorized(["ADMIN"])],
     },
+    User: {
+      user: [Authorized()],
+      users: [Authorized()],
+      findFirstUser: [Authorized()],
+      aggregateUser: [Authorized()],
+      createOneUser: [Authorized(["ADMIN"])],
+      createManyUser: [Authorized(["ADMIN"])],
+      upsertOneUser: [Authorized(["ADMIN"])],
+      updateOneUser: [Authorized(["ADMIN"])],
+      updateManyUser: [Authorized(["ADMIN"])],
+      deleteOneUser: [Authorized(["ADMIN"])],
+      deleteManyUser: [Authorized(["ADMIN"])],
+    }
   };
 
   applyResolversEnhanceMap(resolversEnhanceMap);
