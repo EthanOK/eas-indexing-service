@@ -346,12 +346,32 @@ export async function getFormattedAttestationFromLog(
   let decodedDataJson = "";
 
   try {
-    const schema = await prisma.schema.findUnique({
+    let schema = await prisma.schema.findUnique({
       where: { id: schemaUID },
     });
-
+    
     if (!schema) {
-      return null;
+      // TODO:
+      const [schema_UID, resolver, revocable, schemaString] =
+        await schemaContract.getSchema(schemaUID);
+      if (schema_UID === ethers.constants.HashZero) {
+        return null;
+      }
+      let schemaCount = await prisma.schema.count();
+      schemaCount++;
+      const schemaData: Omit<Schema, "index"> = {
+        id: schema_UID,
+        schema: schemaString,
+        creator: ethers.constants.AddressZero,
+        resolver,
+        time: time.toNumber(),
+        txid: ethers.constants.HashZero,
+        revocable,
+      };
+      console.log("Creating schema", schemaData);
+      schema = await prisma.schema.create({
+        data: { ...schemaData, index: schemaCount.toString() },
+      });
     }
 
     const schemaEncoder = new SchemaEncoder(schema.schema);
@@ -466,15 +486,22 @@ export async function createSchemasFromLogs(logs: ethers.providers.Log[]) {
   let schemaCount = await prisma.schema.count();
 
   for (let schema of schemas) {
-    schemaCount++;
+    const existingSchema = await prisma.schema.findUnique({
+      where: { id: schema.id },
+    });
 
-    console.log("Creating new schema", schema);
-    try {
-      await prisma.schema.create({
-        data: { ...schema, index: schemaCount.toString() },
-      });
-    } catch (error) {
-      console.log("Error creating schema", error);
+    if (existingSchema) {
+      console.log("Schema already exists", schema.id);
+    } else {
+      console.log("Creating new schema", schema);
+      try {
+        schemaCount++;
+        await prisma.schema.create({
+          data: { ...schema, index: schemaCount.toString() },
+        });
+      } catch (error) {
+        console.log("Error creating schema", error);
+      }
     }
   }
 }
@@ -496,7 +523,6 @@ export async function createAttestationsForLogs(logs: ethers.providers.Log[]) {
         console.log("Attestation already exists", attestation.id);
       } else {
         console.log("Creating new attestation", attestation);
-
         await prisma.attestation.create({ data: attestation });
         await processCreatedAttestation(attestation);
       }
